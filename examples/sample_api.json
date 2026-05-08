@@ -1,0 +1,45 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/health",
+    "public": true
+  },
+  {
+    "method": "GET",
+    "path": "/api/users/{id}",
+    "auth_required": true,
+    "object_authorization": false
+  },
+  {
+    "method": "PUT",
+    "path": "/api/users/{user_id}",
+    "auth_required": true,
+    "object_authorization": true,
+    "response_sensitive_fields": ["email"]
+  },
+  {
+    "method": "POST",
+    "path": "/api/admin/config",
+    "auth_required": true,
+    "role_required": "admin"
+  },
+  {
+    "method": "POST",
+    "path": "/api/webhook/stripe",
+    "public": true,
+    "signature_required": false
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/login",
+    "public": true,
+    "rate_limit": false
+  },
+  {
+    "method": "GET",
+    "path": "/api/internal/stats",
+    "auth_required": false,
+    "public": false,
+    "response_sensitive_fields": ["token", "cpf", "revenue"]
+  }
+]

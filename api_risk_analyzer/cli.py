@@ -1,0 +1,49 @@
+import argparse
+
+from api_risk_analyzer.report import build_report, write_json, write_markdown
+from api_risk_analyzer.rules import run_rules
+from api_risk_analyzer.parser import load_api
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Analyze API endpoint metadata for common security risks.")
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--output", default=None)
+    parser.add_argument("--format", choices=["json", "markdown"], default="json")
+    parser.add_argument(
+        "--fail-on",
+        choices=["low", "medium", "high", "critical"],
+        help="Exit with code 1 if findings meet or exceed this severity"
+    )
+    args = parser.parse_args()
+
+    if args.output is None:
+        extension = "md" if args.format == "markdown" else "json"
+        args.output = f"reports/generated-report.{extension}"
+
+    try:
+        endpoints = load_api(args.input)
+    except ValueError as error:
+        print(f"error: {error}")
+        return 1
+
+    print(f"loaded endpoints: {len(endpoints)}")
+
+    findings = run_rules(endpoints)
+    print(f"findings: {len(findings)}")
+
+    report = build_report(endpoints, findings)
+    if args.format == "markdown":
+        write_markdown(report, args.output)
+    else:
+        write_json(report, args.output)
+
+    if args.fail_on:
+        severity_levels = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+        threshold = severity_levels[args.fail_on]
+        for f in findings:
+            if severity_levels.get(f["severity"], 0) >= threshold:
+                print(f"Failed: found {f['severity']} severity issue (limit was {args.fail_on})")
+                return 1
+
+    return 0

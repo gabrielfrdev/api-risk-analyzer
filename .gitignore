@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+reports/*.tmp
+reports/generated-*
+.pytest_cache/
+.coverage
