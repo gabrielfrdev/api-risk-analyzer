@@ -10,10 +10,10 @@ class AnalyzerTest(unittest.TestCase):
             validate_endpoints({"path": "/api/users"})
 
     def test_validate_requires_method_and_path(self):
-        with self.assertRaisesRegex(ValueError, "missing method"):
+        with self.assertRaisesRegex(ValueError, "missing a valid method"):
             validate_endpoints([{"path": "/api/users"}])
 
-        with self.assertRaisesRegex(ValueError, "missing path"):
+        with self.assertRaisesRegex(ValueError, "missing a valid path"):
             validate_endpoints([{"method": "GET"}])
 
     def test_build_report_counts_severity(self):
@@ -50,6 +50,25 @@ class AnalyzerTest(unittest.TestCase):
         output = render_markdown(report)
 
         self.assertIn("| high | AUTH-001 | GET | `/api/private` | Missing auth. |", output)
+
+    def test_render_markdown_escapes_pipes(self):
+        report = {
+            "generated_at": "2026-05-08T16:45:00Z",
+            "total_endpoints": 1,
+            "summary": {"total_findings": 1},
+            "findings": [
+                {
+                    "severity": "high",
+                    "rule_id": "AUTH|001",
+                    "method": "G|ET",
+                    "path": "/api/private|test",
+                    "description": "Missing | auth",
+                    "evidence": "no | evidence"
+                }
+            ],
+        }
+        output = render_markdown(report)
+        self.assertIn(r"| high | AUTH\|001 | G\|ET | `/api/private\|test` | Missing \| auth | no \| evidence |", output)
 
 
 if __name__ == "__main__":

@@ -42,8 +42,16 @@ class ParserTest(unittest.TestCase):
             load_api(self.bad_format_path)
 
     def test_validate_endpoints_missing_method(self):
-        with self.assertRaisesRegex(ValueError, "missing method"):
+        with self.assertRaisesRegex(ValueError, "missing a valid method"):
             validate_endpoints([{"path": "/test"}])
+
+    def test_validate_endpoints_invalid_boolean(self):
+        with self.assertRaisesRegex(ValueError, "field 'auth_required' must be a boolean"):
+            validate_endpoints([{"method": "GET", "path": "/test", "auth_required": "false"}])
+
+    def test_validate_endpoints_invalid_list(self):
+        with self.assertRaisesRegex(ValueError, "field 'response_sensitive_fields' must be a list"):
+            validate_endpoints([{"method": "GET", "path": "/test", "response_sensitive_fields": "password"}])
 
 if __name__ == "__main__":
     unittest.main()

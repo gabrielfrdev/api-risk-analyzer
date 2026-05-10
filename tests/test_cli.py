@@ -53,5 +53,13 @@ class CliTest(unittest.TestCase):
             exit_code = main()
             self.assertEqual(exit_code, 1)
 
+    @patch("sys.stdout")
+    def test_cli_default_markdown_output(self, mock_stdout):
+        with patch("sys.argv", ["analyzer.py", "--input", self.sample_path, "--format", "markdown"]):
+            main()
+            self.mock_write_markdown.assert_called_once()
+            args, _ = self.mock_write_markdown.call_args
+            self.assertEqual(args[1], "reports/generated-report.md")
+
 if __name__ == "__main__":
     unittest.main()

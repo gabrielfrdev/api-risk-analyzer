@@ -51,10 +51,10 @@ def render_markdown(report):
     ]
 
     for finding in report["findings"]:
-        severity = finding.get("severity", "UNKNOWN")
-        rule_id = finding.get("rule_id", "UNKNOWN")
-        method = finding.get("method", "UNKNOWN")
-        path = finding.get("path", "UNKNOWN")
+        severity = _escape_markdown_cell(finding.get("severity", "UNKNOWN"))
+        rule_id = _escape_markdown_cell(finding.get("rule_id", "UNKNOWN"))
+        method = _escape_markdown_cell(finding.get("method", "UNKNOWN"))
+        path = _escape_markdown_cell(finding.get("path", "UNKNOWN"))
         description = _escape_markdown_cell(finding.get("description", ""))
         evidence = _escape_markdown_cell(finding.get("evidence") or "-")
 

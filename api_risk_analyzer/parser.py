@@ -28,7 +28,17 @@ def validate_endpoints(endpoints):
     for index, endpoint in enumerate(endpoints, start=1):
         if not isinstance(endpoint, dict):
             raise ValueError(f"endpoint #{index} must be an object")
-        if not endpoint.get("method"):
-            raise ValueError(f"endpoint #{index} is missing method")
-        if not endpoint.get("path"):
-            raise ValueError(f"endpoint #{index} is missing path")
+        method = endpoint.get("method")
+        if not method or not isinstance(method, str) or not method.strip():
+            raise ValueError(f"endpoint #{index} is missing a valid method")
+            
+        path = endpoint.get("path")
+        if not path or not isinstance(path, str) or not path.strip():
+            raise ValueError(f"endpoint #{index} is missing a valid path")
+            
+        for bool_field in ["auth_required", "public", "object_authorization", "rate_limit", "signature_required"]:
+            if bool_field in endpoint and not isinstance(endpoint[bool_field], bool):
+                raise ValueError(f"endpoint #{index} field '{bool_field}' must be a boolean")
+                
+        if "response_sensitive_fields" in endpoint and not isinstance(endpoint["response_sensitive_fields"], list):
+            raise ValueError(f"endpoint #{index} field 'response_sensitive_fields' must be a list")
