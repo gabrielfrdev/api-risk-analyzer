@@ -1,6 +1,14 @@
 import json
 from api_risk_analyzer.openapi import parse_openapi
 
+BOOLEAN_FIELDS = [
+    "auth_required",
+    "public",
+    "object_authorization",
+    "rate_limit",
+    "signature_required",
+]
+
 
 def load_api(path):
     try:
@@ -31,14 +39,25 @@ def validate_endpoints(endpoints):
         method = endpoint.get("method")
         if not method or not isinstance(method, str) or not method.strip():
             raise ValueError(f"endpoint #{index} is missing a valid method")
-            
+        endpoint["method"] = method.strip().upper()
+
         path = endpoint.get("path")
         if not path or not isinstance(path, str) or not path.strip():
             raise ValueError(f"endpoint #{index} is missing a valid path")
-            
-        for bool_field in ["auth_required", "public", "object_authorization", "rate_limit", "signature_required"]:
+        endpoint["path"] = path.strip()
+
+        for bool_field in BOOLEAN_FIELDS:
             if bool_field in endpoint and not isinstance(endpoint[bool_field], bool):
                 raise ValueError(f"endpoint #{index} field '{bool_field}' must be a boolean")
-                
-        if "response_sensitive_fields" in endpoint and not isinstance(endpoint["response_sensitive_fields"], list):
-            raise ValueError(f"endpoint #{index} field 'response_sensitive_fields' must be a list")
+
+        if "response_sensitive_fields" in endpoint:
+            sensitive_fields = endpoint["response_sensitive_fields"]
+            if not isinstance(sensitive_fields, list):
+                raise ValueError(f"endpoint #{index} field 'response_sensitive_fields' must be a list")
+            if not all(isinstance(field, str) for field in sensitive_fields):
+                raise ValueError(f"endpoint #{index} field 'response_sensitive_fields' must contain strings")
+            endpoint["response_sensitive_fields"] = [
+                field.strip()
+                for field in sensitive_fields
+                if field.strip()
+            ]

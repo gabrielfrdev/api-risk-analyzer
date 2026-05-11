@@ -30,7 +30,6 @@ class CliTest(unittest.TestCase):
 
     @patch("sys.stdout")
     def test_cli_fail_on_high_with_critical_finding(self, mock_stdout):
-        # The sample has API1-001 which is critical
         with patch("sys.argv", ["analyzer.py", "--input", self.sample_path, "--fail-on", "high"]):
             exit_code = main()
             self.assertEqual(exit_code, 1)
