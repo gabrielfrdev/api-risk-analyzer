@@ -1,0 +1,52 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Example API",
+    "version": "1.0.0"
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "security": []
+      }
+    },
+    "/api/users/{id}": {
+      "x-object-authorization": true,
+      "get": {
+        "x-response-sensitive-fields": [
+          "email"
+        ]
+      }
+    },
+    "/api/admin/settings": {
+      "post": {
+        "x-role-required": "admin"
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "security": [],
+        "x-rate-limit": true
+      }
+    },
+    "/api/webhooks/payments": {
+      "post": {
+        "security": [],
+        "x-signature-required": false
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

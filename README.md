@@ -10,6 +10,11 @@ It reads a JSON file or an OpenAPI schema and reports risky defaults, like missi
 python analyzer.py --input examples/sample_api.json
 ```
 
+OpenAPI input:
+```bash
+python analyzer.py --input examples/openapi_sample.json
+```
+
 Markdown output:
 ```bash
 python analyzer.py --input examples/sample_api.json --format markdown --output reports/generated-report.md
@@ -19,3 +24,11 @@ Fail on high severity findings:
 ```bash
 python analyzer.py --input examples/sample_api.json --fail-on high
 ```
+
+For OpenAPI files, these optional fields can be added to operations or paths:
+
+- `x-object-authorization`
+- `x-role-required`
+- `x-rate-limit`
+- `x-signature-required`
+- `x-response-sensitive-fields`

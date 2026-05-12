@@ -6,6 +6,11 @@ from api_risk_analyzer.openapi import parse_openapi
 
 
 class OpenAPITest(unittest.TestCase):
+    def write_schema(self, schema):
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as file:
+            json.dump(schema, file)
+            return file.name
+
     def setUp(self):
         schema = {
             "openapi": "3.0.0",
@@ -21,9 +26,7 @@ class OpenAPITest(unittest.TestCase):
                 }
             }
         }
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as f:
-            self.openapi_path = f.name
-            json.dump(schema, f)
+        self.openapi_path = self.write_schema(schema)
 
     def tearDown(self):
         if os.path.exists(self.openapi_path):
@@ -42,6 +45,86 @@ class OpenAPITest(unittest.TestCase):
         private = next(e for e in endpoints if e["path"] == "/api/private")
         self.assertTrue(private["auth_required"])
         self.assertFalse(private["public"])
+
+    def test_parse_openapi_extensions(self):
+        schema = {
+            "openapi": "3.0.0",
+            "security": [{"Bearer": []}],
+            "paths": {
+                "/api/users/{id}": {
+                    "x-object-authorization": True,
+                    "get": {
+                        "x-role-required": "user",
+                        "x-rate-limit": True,
+                        "x-response-sensitive-fields": [" email ", "", "token"],
+                    }
+                },
+                "/api/webhooks/payments": {
+                    "post": {
+                        "security": [],
+                        "x-signature-required": False,
+                    }
+                }
+            }
+        }
+
+        endpoints = parse_openapi(schema)
+        user_route = next(e for e in endpoints if e["path"] == "/api/users/{id}")
+        self.assertTrue(user_route["object_authorization"])
+        self.assertEqual(user_route["role_required"], "user")
+        self.assertTrue(user_route["rate_limit"])
+        self.assertEqual(user_route["response_sensitive_fields"], ["email", "token"])
+
+        webhook_route = next(e for e in endpoints if e["path"] == "/api/webhooks/payments")
+        self.assertFalse(webhook_route["auth_required"])
+        self.assertTrue(webhook_route["public"])
+        self.assertFalse(webhook_route["signature_required"])
+
+    def test_operation_extension_overrides_path_extension(self):
+        schema = {
+            "openapi": "3.0.0",
+            "paths": {
+                "/api/accounts/{accountId}": {
+                    "x-rate-limit": False,
+                    "get": {
+                        "x-rate-limit": True,
+                    }
+                }
+            }
+        }
+
+        endpoint = parse_openapi(schema)[0]
+        self.assertTrue(endpoint["rate_limit"])
+
+    def test_empty_security_requirement_allows_public_access(self):
+        schema = {
+            "openapi": "3.0.0",
+            "security": [{}, {"Bearer": []}],
+            "paths": {
+                "/api/status": {
+                    "get": {}
+                }
+            }
+        }
+
+        endpoint = parse_openapi(schema)[0]
+        self.assertFalse(endpoint["auth_required"])
+        self.assertTrue(endpoint["public"])
+
+    def test_invalid_extension_type_is_rejected(self):
+        schema = {
+            "openapi": "3.0.0",
+            "paths": {
+                "/api/users": {
+                    "get": {
+                        "x-rate-limit": "true",
+                    }
+                }
+            }
+        }
+
+        with self.assertRaisesRegex(ValueError, "x-rate-limit must be a boolean"):
+            parse_openapi(schema)
 
 if __name__ == "__main__":
     unittest.main()
