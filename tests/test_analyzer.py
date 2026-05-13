@@ -31,6 +31,22 @@ class AnalyzerTest(unittest.TestCase):
         self.assertEqual(report["summary"]["critical"], 1)
         self.assertEqual(report["summary"]["high"], 2)
 
+    def test_build_report_sorts_findings_by_risk(self):
+        report = build_report(
+            endpoints=[],
+            findings=[
+                {"severity": "medium", "path": "/api/profile", "method": "GET", "rule_id": "DATA-001"},
+                {"severity": "critical", "path": "/api/users/{id}", "method": "GET", "rule_id": "API1-001"},
+                {"severity": "high", "path": "/api/auth/login", "method": "POST", "rule_id": "AUTH-002"},
+                {"severity": "low", "path": "/api/status", "method": "GET", "rule_id": "INFO-001"},
+            ],
+        )
+
+        self.assertEqual(
+            [finding["severity"] for finding in report["findings"]],
+            ["critical", "high", "medium", "low"],
+        )
+
     def test_render_markdown_contains_findings_table(self):
         report = {
             "generated_at": "2026-05-08T16:45:00Z",

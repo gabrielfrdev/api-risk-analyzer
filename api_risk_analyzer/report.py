@@ -2,9 +2,25 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+SEVERITY_ORDER = {
+    "critical": 0,
+    "high": 1,
+    "medium": 2,
+    "low": 3,
+}
+
 
 def _escape_markdown_cell(text):
     return str(text).replace("|", "\\|")
+
+
+def _finding_sort_key(finding):
+    return (
+        SEVERITY_ORDER.get(finding.get("severity"), len(SEVERITY_ORDER)),
+        finding.get("path", ""),
+        finding.get("method", ""),
+        finding.get("rule_id", ""),
+    )
 
 
 def build_report(endpoints, findings):
@@ -25,7 +41,7 @@ def build_report(endpoints, findings):
         "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "total_endpoints": len(endpoints),
         "summary": summary,
-        "findings": findings,
+        "findings": sorted(findings, key=_finding_sort_key),
     }
 
 
