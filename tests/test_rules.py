@@ -46,11 +46,11 @@ class RulesTest(unittest.TestCase):
 
         self.assertEqual(findings[0]["rule_id"], "API1-001")
 
-    def test_object_id_pattern_ignores_slugs(self):
+    def test_object_id_pattern_ignores_slugs_and_grids(self):
         findings = run_rules([
             {
                 "method": "GET",
-                "path": "/api/products/{slug}",
+                "path": "/api/products/{slug}/data/{grid}",
                 "auth_required": True,
                 "object_authorization": False,
                 "response_sensitive_fields": [],
@@ -58,6 +58,33 @@ class RulesTest(unittest.TestCase):
         ])
 
         self.assertEqual(findings, [])
+
+    def test_object_id_pattern_matches_various_formats(self):
+        paths = [
+            "/api/users/{id}",
+            "/api/users/{userId}",
+            "/api/users/{user_id}",
+            "/api/users/{uuid}",
+            "/api/users/{account_uuid}",
+            "/api/users/:id",
+            "/api/users/:userId",
+            "/api/users/:user_id",
+            "/api/users/:uuid",
+            "/api/users/:account_uuid"
+        ]
+
+        for path in paths:
+            findings = run_rules([
+                {
+                    "method": "GET",
+                    "path": path,
+                    "auth_required": True,
+                    "object_authorization": False,
+                    "response_sensitive_fields": [],
+                }
+            ])
+            self.assertEqual(len(findings), 1, f"Failed to match ID pattern in {path}")
+            self.assertEqual(findings[0]["rule_id"], "API1-001")
 
     def test_sample_style_endpoint_gets_expected_score(self):
         endpoint = {

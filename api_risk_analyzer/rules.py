@@ -1,7 +1,7 @@
 import re
 
 SENSITIVE_FIELDS = {"password", "passwd", "token", "secret", "cpf", "ssn", "card_number", "credit_card"}
-OBJECT_ID_PATTERN = re.compile(r"(\{(?:[a-z0-9_-]+)?id\}|:(?:[a-z0-9_-]+)?id)", re.IGNORECASE)
+OBJECT_ID_PATTERN = re.compile(r"(\{(?:[a-zA-Z0-9_-]+_)?(?:id|uuid)\}|\{(?:[a-zA-Z0-9]+)(?:Id|Uuid)\}|:(?:[a-zA-Z0-9_-]+_)?(?:id|uuid)|:(?:[a-zA-Z0-9]+)(?:Id|Uuid))")
 
 
 def finding(endpoint, rule_id, description, severity, recommendation, category, evidence=None):
