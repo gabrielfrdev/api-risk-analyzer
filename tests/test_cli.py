@@ -60,5 +60,11 @@ class CliTest(unittest.TestCase):
             args, _ = self.mock_write_markdown.call_args
             self.assertEqual(args[1], "reports/generated-report.md")
 
+    @patch("builtins.print")
+    def test_cli_prints_severity_summary(self, mock_print):
+        with patch("sys.argv", ["analyzer.py", "--input", self.sample_path]):
+            main()
+            mock_print.assert_any_call("findings: 1 (critical: 1)")
+
 if __name__ == "__main__":
     unittest.main()

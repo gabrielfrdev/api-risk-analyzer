@@ -30,7 +30,16 @@ def main():
     print(f"loaded endpoints: {len(endpoints)}")
 
     findings = run_rules(endpoints)
-    print(f"findings: {len(findings)}")
+    
+    if not findings:
+        print(f"findings: 0")
+    else:
+        counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+        for f in findings:
+            counts[f["severity"]] = counts.get(f["severity"], 0) + 1
+            
+        summary_parts = [f"{level}: {counts[level]}" for level in ["critical", "high", "medium", "low"] if counts[level] > 0]
+        print(f"findings: {len(findings)} ({', '.join(summary_parts)})")
 
     report = build_report(endpoints, findings)
     if args.format == "markdown":
