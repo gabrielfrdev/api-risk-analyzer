@@ -126,5 +126,23 @@ class OpenAPITest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "x-rate-limit must be a boolean"):
             parse_openapi(schema)
 
+    def test_invalid_paths_object(self):
+        schema = {
+            "openapi": "3.0.0",
+            "paths": ["/api/users"]
+        }
+        with self.assertRaisesRegex(ValueError, "OpenAPI 'paths' must be an object"):
+            parse_openapi(schema)
+
+    def test_invalid_path_item_object(self):
+        schema = {
+            "openapi": "3.0.0",
+            "paths": {
+                "/api/users": "GET"
+            }
+        }
+        with self.assertRaisesRegex(ValueError, "OpenAPI path '/api/users' must be an object"):
+            parse_openapi(schema)
+
 if __name__ == "__main__":
     unittest.main()

@@ -47,7 +47,13 @@ def parse_openapi(data):
     has_global_security = _requires_auth(data.get("security"))
 
     paths = data.get("paths", {})
+    if not isinstance(paths, dict):
+        raise ValueError("OpenAPI 'paths' must be an object")
+
     for route, path_details in paths.items():
+        if not isinstance(path_details, dict):
+            raise ValueError(f"OpenAPI path '{route}' must be an object")
+
         for method, operation_details in path_details.items():
             if method.lower() not in HTTP_METHODS or not isinstance(operation_details, dict):
                 continue
