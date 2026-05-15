@@ -41,6 +41,24 @@ def _requires_auth(security):
     return all(bool(requirement) for requirement in security)
 
 
+def _infer_response_fields(operation_details):
+    fields = set()
+
+    def _traverse(node):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if k == "properties" and isinstance(v, dict):
+                    for prop_name in v.keys():
+                        fields.add(str(prop_name))
+                _traverse(v)
+        elif isinstance(node, list):
+            for item in node:
+                _traverse(item)
+
+    _traverse(operation_details.get("responses", {}))
+    return list(fields)
+
+
 def parse_openapi(data):
     endpoints = []
 
@@ -89,12 +107,16 @@ def parse_openapi(data):
                     operation_details,
                     "x-signature-required",
                 ),
-                "response_sensitive_fields": _string_list_extension(
-                    path_details,
-                    operation_details,
-                    "x-response-sensitive-fields",
-                ),
             }
+
+            explicit_fields = _string_list_extension(
+                path_details,
+                operation_details,
+                "x-response-sensitive-fields",
+            )
+            inferred_fields = _infer_response_fields(operation_details)
+            endpoint["response_sensitive_fields"] = sorted(list(set(explicit_fields + inferred_fields)))
+
             endpoints.append(endpoint)
 
     return endpoints

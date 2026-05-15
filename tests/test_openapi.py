@@ -144,5 +144,41 @@ class OpenAPITest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "OpenAPI path '/api/users' must be an object"):
             parse_openapi(schema)
 
+    def test_infer_response_fields(self):
+        schema = {
+            "openapi": "3.0.0",
+            "paths": {
+                "/api/auth/login": {
+                    "post": {
+                        "responses": {
+                            "200": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "token": {"type": "string"},
+                                                "user": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "password": {"type": "string"},
+                                                        "name": {"type": "string"}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        endpoint = parse_openapi(schema)[0]
+        self.assertIn("token", endpoint["response_sensitive_fields"])
+        self.assertIn("password", endpoint["response_sensitive_fields"])
+        self.assertIn("name", endpoint["response_sensitive_fields"])
+
 if __name__ == "__main__":
     unittest.main()
