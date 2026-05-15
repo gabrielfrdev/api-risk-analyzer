@@ -35,6 +35,8 @@ def _string_list_extension(path_details, operation_details, name):
     return [item.strip() for item in value if item.strip()]
 
 
+from api_risk_analyzer.rules import SENSITIVE_FIELDS
+
 def _requires_auth(security):
     if not security:
         return False
@@ -49,7 +51,8 @@ def _infer_response_fields(operation_details):
             for k, v in node.items():
                 if k == "properties" and isinstance(v, dict):
                     for prop_name in v.keys():
-                        fields.add(str(prop_name))
+                        if str(prop_name).lower() in SENSITIVE_FIELDS:
+                            fields.add(str(prop_name))
                 _traverse(v)
         elif isinstance(node, list):
             for item in node:

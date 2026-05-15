@@ -178,7 +178,7 @@ class OpenAPITest(unittest.TestCase):
         endpoint = parse_openapi(schema)[0]
         self.assertIn("token", endpoint["response_sensitive_fields"])
         self.assertIn("password", endpoint["response_sensitive_fields"])
-        self.assertIn("name", endpoint["response_sensitive_fields"])
+        self.assertNotIn("name", endpoint["response_sensitive_fields"])
 
 if __name__ == "__main__":
     unittest.main()
