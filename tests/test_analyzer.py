@@ -3,7 +3,11 @@ import unittest
 from api_risk_analyzer.report import build_report, render_markdown
 from api_risk_analyzer.parser import validate_endpoints
 
-
+from api_risk_analyzer.rules import (
+    check_admin_without_role,
+    check_unsigned_webhook,
+    check_login_without_rate_limit,
+)
 class AnalyzerTest(unittest.TestCase):
     def test_validate_requires_a_list(self):
         with self.assertRaisesRegex(ValueError, "list of endpoints"):
@@ -85,6 +89,32 @@ class AnalyzerTest(unittest.TestCase):
         }
         output = render_markdown(report)
         self.assertIn(r"| high | AUTH\|001 | G\|ET | `/api/private\|test` | Missing \| auth | no \| evidence |", output)
+
+    def test_segment_based_matching_avoids_false_positives(self):
+        endpoints = [
+            {"method": "GET", "path": "/api/administration"},
+            {"method": "POST", "path": "/api/webhook_handler"},
+            {"method": "POST", "path": "/api/login_history"}
+        ]
+        
+        # admin without role
+        self.assertEqual(len(check_admin_without_role(endpoints)), 0)
+        
+        # webhook without signature
+        self.assertEqual(len(check_unsigned_webhook(endpoints)), 0)
+        
+        # login without rate limit
+        self.assertEqual(len(check_login_without_rate_limit(endpoints)), 0)
+
+        endpoints_positive = [
+            {"method": "GET", "path": "/api/admin"},
+            {"method": "POST", "path": "/api/webhook/github"},
+            {"method": "POST", "path": "/api/auth/login"}
+        ]
+        
+        self.assertEqual(len(check_admin_without_role(endpoints_positive)), 1)
+        self.assertEqual(len(check_unsigned_webhook(endpoints_positive)), 1)
+        self.assertEqual(len(check_login_without_rate_limit(endpoints_positive)), 1)
 
 
 if __name__ == "__main__":

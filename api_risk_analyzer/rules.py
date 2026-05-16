@@ -37,6 +37,10 @@ def is_public(endpoint):
     return bool(endpoint.get("public", False))
 
 
+def _get_segments(path):
+    return [segment.lower() for segment in path.strip("/").split("/") if segment]
+
+
 def fields(endpoint):
     values = endpoint.get("response_sensitive_fields", [])
     if values is None:
@@ -82,7 +86,8 @@ def check_admin_without_role(endpoints):
     findings = []
     for endpoint in endpoints:
         path = endpoint.get("path", "")
-        if "/admin" in path and not endpoint.get("role_required"):
+        segments = _get_segments(path)
+        if "admin" in segments and not endpoint.get("role_required"):
             findings.append(finding(
                 endpoint,
                 rule_id="API5-001",
@@ -99,7 +104,8 @@ def check_unsigned_webhook(endpoints):
     findings = []
     for endpoint in endpoints:
         path = endpoint.get("path", "")
-        if "webhook" in path.lower() and not endpoint.get("signature_required", False):
+        segments = _get_segments(path)
+        if "webhook" in segments and not endpoint.get("signature_required", False):
             findings.append(finding(
                 endpoint,
                 rule_id="WEBHOOK-001",
@@ -116,7 +122,8 @@ def check_login_without_rate_limit(endpoints):
     findings = []
     for endpoint in endpoints:
         path = endpoint.get("path", "")
-        if "login" in path.lower() and not endpoint.get("rate_limit", False):
+        segments = _get_segments(path)
+        if "login" in segments and not endpoint.get("rate_limit", False):
             findings.append(finding(
                 endpoint,
                 rule_id="AUTH-002",
