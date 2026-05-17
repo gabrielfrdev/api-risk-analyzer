@@ -1,3 +1,5 @@
+from api_risk_analyzer.rules import is_sensitive_field_name
+
 HTTP_METHODS = {"get", "post", "put", "delete", "patch", "options", "head"}
 
 
@@ -35,8 +37,6 @@ def _string_list_extension(path_details, operation_details, name):
     return [item.strip() for item in value if item.strip()]
 
 
-from api_risk_analyzer.rules import SENSITIVE_FIELDS
-
 def _requires_auth(security):
     if not security:
         return False
@@ -51,7 +51,7 @@ def _infer_response_fields(operation_details):
             for k, v in node.items():
                 if k == "properties" and isinstance(v, dict):
                     for prop_name in v.keys():
-                        if str(prop_name).lower() in SENSITIVE_FIELDS:
+                        if is_sensitive_field_name(prop_name):
                             fields.add(str(prop_name))
                 _traverse(v)
         elif isinstance(node, list):
@@ -118,7 +118,9 @@ def parse_openapi(data):
                 "x-response-sensitive-fields",
             )
             inferred_fields = _infer_response_fields(operation_details)
-            endpoint["response_sensitive_fields"] = sorted(list(set(explicit_fields + inferred_fields)))
+            endpoint["response_sensitive_fields"] = sorted(
+                set(explicit_fields + inferred_fields)
+            )
 
             endpoints.append(endpoint)
 

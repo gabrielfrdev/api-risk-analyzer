@@ -53,9 +53,13 @@ def validate_endpoints(endpoints):
         if "response_sensitive_fields" in endpoint:
             sensitive_fields = endpoint["response_sensitive_fields"]
             if not isinstance(sensitive_fields, list):
-                raise ValueError(f"endpoint #{index} field 'response_sensitive_fields' must be a list")
+                raise ValueError(
+                    f"endpoint #{index} field 'response_sensitive_fields' must be a list"
+                )
             if not all(isinstance(field, str) for field in sensitive_fields):
-                raise ValueError(f"endpoint #{index} field 'response_sensitive_fields' must contain strings")
+                raise ValueError(
+                    f"endpoint #{index} field 'response_sensitive_fields' must contain strings"
+                )
             endpoint["response_sensitive_fields"] = [
                 field.strip()
                 for field in sensitive_fields

@@ -70,11 +70,26 @@ class ParserTest(unittest.TestCase):
 
     def test_validate_endpoints_invalid_list(self):
         with self.assertRaisesRegex(ValueError, "field 'response_sensitive_fields' must be a list"):
-            validate_endpoints([{"method": "GET", "path": "/test", "response_sensitive_fields": "password"}])
+            validate_endpoints([
+                {
+                    "method": "GET",
+                    "path": "/test",
+                    "response_sensitive_fields": "password",
+                }
+            ])
 
     def test_validate_endpoints_rejects_non_string_sensitive_fields(self):
-        with self.assertRaisesRegex(ValueError, "field 'response_sensitive_fields' must contain strings"):
-            validate_endpoints([{"method": "GET", "path": "/test", "response_sensitive_fields": ["token", 123]}])
+        with self.assertRaisesRegex(
+            ValueError,
+            "field 'response_sensitive_fields' must contain strings",
+        ):
+            validate_endpoints([
+                {
+                    "method": "GET",
+                    "path": "/test",
+                    "response_sensitive_fields": ["token", 123],
+                }
+            ])
 
 if __name__ == "__main__":
     unittest.main()

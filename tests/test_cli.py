@@ -10,6 +10,7 @@ class CliTest(unittest.TestCase):
     def setUp(self):
         self.mock_write_json = patch("api_risk_analyzer.cli.write_json").start()
         self.mock_write_markdown = patch("api_risk_analyzer.cli.write_markdown").start()
+        self.mock_write_sarif = patch("api_risk_analyzer.cli.write_sarif").start()
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w") as f:
             self.sample_path = f.name
@@ -54,17 +55,28 @@ class CliTest(unittest.TestCase):
 
     @patch("sys.stdout")
     def test_cli_default_markdown_output(self, mock_stdout):
-        with patch("sys.argv", ["analyzer.py", "--input", self.sample_path, "--format", "markdown"]):
+        argv = ["analyzer.py", "--input", self.sample_path, "--format", "markdown"]
+        with patch("sys.argv", argv):
             main()
             self.mock_write_markdown.assert_called_once()
             args, _ = self.mock_write_markdown.call_args
             self.assertEqual(args[1], "reports/generated-report.md")
+
+    @patch("sys.stdout")
+    def test_cli_default_sarif_output(self, mock_stdout):
+        with patch("sys.argv", ["analyzer.py", "--input", self.sample_path, "--format", "sarif"]):
+            main()
+            self.mock_write_sarif.assert_called_once()
+            args, _ = self.mock_write_sarif.call_args
+            self.assertEqual(args[1], "reports/generated-report.sarif")
+            self.assertEqual(args[2], self.sample_path)
 
     @patch("builtins.print")
     def test_cli_prints_severity_summary(self, mock_print):
         with patch("sys.argv", ["analyzer.py", "--input", self.sample_path]):
             main()
             mock_print.assert_any_call("findings: 1 (critical: 1)")
+
 
 if __name__ == "__main__":
     unittest.main()

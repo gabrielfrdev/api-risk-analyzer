@@ -1,15 +1,17 @@
 import argparse
 
-from api_risk_analyzer.report import build_report, write_json, write_markdown
+from api_risk_analyzer.report import build_report, write_json, write_markdown, write_sarif
 from api_risk_analyzer.rules import run_rules
 from api_risk_analyzer.parser import load_api
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze API endpoint metadata for common security risks.")
+    parser = argparse.ArgumentParser(
+        description="Analyze API endpoint metadata for common security risks."
+    )
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", default=None)
-    parser.add_argument("--format", choices=["json", "markdown"], default="json")
+    parser.add_argument("--format", choices=["json", "markdown", "sarif"], default="json")
     parser.add_argument(
         "--fail-on",
         choices=["low", "medium", "high", "critical"],
@@ -18,7 +20,11 @@ def main():
     args = parser.parse_args()
 
     if args.output is None:
-        extension = "md" if args.format == "markdown" else "json"
+        extension = {
+            "json": "json",
+            "markdown": "md",
+            "sarif": "sarif",
+        }[args.format]
         args.output = f"reports/generated-report.{extension}"
 
     try:
@@ -30,19 +36,25 @@ def main():
     print(f"loaded endpoints: {len(endpoints)}")
 
     findings = run_rules(endpoints)
-    
+
     if not findings:
-        print(f"findings: 0")
+        print("findings: 0")
     else:
         counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
         for f in findings:
             counts[f["severity"]] = counts.get(f["severity"], 0) + 1
-            
-        summary_parts = [f"{level}: {counts[level]}" for level in ["critical", "high", "medium", "low"] if counts[level] > 0]
+
+        summary_parts = [
+            f"{level}: {counts[level]}"
+            for level in ["critical", "high", "medium", "low"]
+            if counts[level] > 0
+        ]
         print(f"findings: {len(findings)} ({', '.join(summary_parts)})")
 
     report = build_report(endpoints, findings)
-    if args.format == "markdown":
+    if args.format == "sarif":
+        write_sarif(report, args.output, args.input)
+    elif args.format == "markdown":
         write_markdown(report, args.output)
     else:
         write_json(report, args.output)

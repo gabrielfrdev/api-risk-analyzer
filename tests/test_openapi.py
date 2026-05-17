@@ -158,6 +158,7 @@ class OpenAPITest(unittest.TestCase):
                                             "type": "object",
                                             "properties": {
                                                 "token": {"type": "string"},
+                                                "accessToken": {"type": "string"},
                                                 "user": {
                                                     "type": "object",
                                                     "properties": {
@@ -177,6 +178,7 @@ class OpenAPITest(unittest.TestCase):
         }
         endpoint = parse_openapi(schema)[0]
         self.assertIn("token", endpoint["response_sensitive_fields"])
+        self.assertIn("accessToken", endpoint["response_sensitive_fields"])
         self.assertIn("password", endpoint["response_sensitive_fields"])
         self.assertNotIn("name", endpoint["response_sensitive_fields"])
 
