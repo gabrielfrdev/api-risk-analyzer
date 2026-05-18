@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "api-risk-analyzer"
+version = "0.1.0"
+description = "A lightweight linter for API endpoint metadata and OpenAPI schemas to detect OWASP API security risks."
+readme = "README.md"
+authors = [
+    { name = "Gabriel Ferreira", email = "153218445+gabrielfrdev@users.noreply.github.com" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Security",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/gabrielfrdev/api-risk-analyzer"
+Repository = "https://github.com/gabrielfrdev/api-risk-analyzer.git"
+
+[project.scripts]
+api-risk-analyzer = "api_risk_analyzer.cli:main"
