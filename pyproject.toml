@@ -10,7 +10,7 @@ readme = "README.md"
 authors = [
     { name = "Gabriel Ferreira", email = "153218445+gabrielfrdev@users.noreply.github.com" }
 ]
-license = { text = "MIT" }
+license = "MIT"
 requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 4 - Beta",

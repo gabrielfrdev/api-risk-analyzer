@@ -148,6 +148,6 @@ class RulesTest(unittest.TestCase):
         self.assertEqual(len(check_login_without_rate_limit(endpoints_positive)), 1)
 
 
-
 if __name__ == "__main__":
     unittest.main()
+

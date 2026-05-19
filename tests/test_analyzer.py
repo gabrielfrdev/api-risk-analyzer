@@ -51,7 +51,6 @@ class AnalyzerTest(unittest.TestCase):
         self.assertEqual(report["endpoint_scores"][0], {"method": "GET", "path": "/api/public", "score": "low"})
         self.assertEqual(report["endpoint_scores"][1], {"method": "POST", "path": "/api/admin", "score": "critical"})
 
-
     def test_build_report_sorts_findings_by_risk(self):
         report = build_report(
             endpoints=[],
@@ -183,7 +182,6 @@ class AnalyzerTest(unittest.TestCase):
         self.assertNotIn("work", uri)
 
 
-
-
 if __name__ == "__main__":
     unittest.main()
+
