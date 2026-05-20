@@ -182,5 +182,16 @@ class OpenAPITest(unittest.TestCase):
         self.assertIn("password", endpoint["response_sensitive_fields"])
         self.assertNotIn("name", endpoint["response_sensitive_fields"])
 
+    def test_parse_openapi_validates_security_is_list(self):
+        schema = {
+            "openapi": "3.0.0",
+            "security": {"BearerAuth": []},
+            "paths": {"/api/test": {"get": {}}},
+        }
+        with self.assertRaisesRegex(ValueError, "OpenAPI 'security' must be a list"):
+            parse_openapi(schema)
+
+
 if __name__ == "__main__":
     unittest.main()
+

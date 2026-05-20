@@ -51,6 +51,15 @@ class AnalyzerTest(unittest.TestCase):
         self.assertEqual(report["endpoint_scores"][0], {"method": "GET", "path": "/api/public", "score": "low"})
         self.assertEqual(report["endpoint_scores"][1], {"method": "POST", "path": "/api/admin", "score": "critical"})
 
+    def test_endpoint_scores_handles_duplicate_paths_independently(self):
+        endpoints = [
+            {"method": "GET", "path": "/api/users/{id}", "auth_required": True, "object_authorization": False},
+            {"method": "GET", "path": "/api/users/{id}", "auth_required": True, "object_authorization": True},
+        ]
+        report = build_report(endpoints, [])
+        scores = [ep["score"] for ep in report["endpoint_scores"]]
+        self.assertEqual(scores, ["critical", "low"])
+
     def test_build_report_sorts_findings_by_risk(self):
         report = build_report(
             endpoints=[],

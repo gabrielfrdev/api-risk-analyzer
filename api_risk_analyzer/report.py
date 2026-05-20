@@ -113,23 +113,18 @@ def _sarif_rules(findings):
     return rules
 
 
-def compute_endpoint_scores(endpoints, findings):
-    findings_map = {}
-    for f in findings:
-        key = (f.get("method", "").upper(), f.get("path", ""))
-        findings_map.setdefault(key, []).append(f)
-
+def compute_endpoint_scores(endpoints, findings=None):
     scores = []
     for ep in endpoints:
         method = ep.get("method", "").upper()
         path = ep.get("path", "")
-        ep_findings = findings_map.get((method, path), [])
         scores.append({
             "method": method,
             "path": path,
-            "score": score_endpoint(ep, endpoint_findings=ep_findings),
+            "score": score_endpoint(ep),
         })
     return scores
+
 
 
 def build_report(endpoints, findings):

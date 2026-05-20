@@ -38,9 +38,15 @@ def _string_list_extension(path_details, operation_details, name):
 
 
 def _requires_auth(security):
+    if security is None:
+        return False
+    if not isinstance(security, list):
+        raise ValueError("OpenAPI 'security' must be a list")
     if not security:
         return False
     return all(bool(requirement) for requirement in security)
+
+
 
 
 def _infer_response_fields(operation_details):
