@@ -1,62 +1,40 @@
 # api-risk-analyzer
 
-A simple Python CLI tool to analyze API endpoint schemas and metadata for common OWASP API security risks.
+A Python CLI that checks API endpoint metadata and OpenAPI 3.0+ specs against a handful of common OWASP API Security risks — missing auth, IDOR-prone routes, unprotected webhooks, that kind of thing.
 
-It reads custom JSON route definitions or OpenAPI 3.0+ schemas and checks for missing security declarations like unauthenticated endpoints, ID-based routes missing object ownership checks, unprotected webhooks, and exposed sensitive response fields.
+It doesn't touch a running API. It reads either a plain JSON list of endpoints or an OpenAPI schema and checks whether security controls were *declared* (`auth_required`, `object_authorization`, `x-rate-limit`, ...). Think schema linter for a CI gate, not a DAST/SAST scanner — it won't catch a bug in your auth middleware, only tell you the route never said it needed one.
 
-## Scope & Limitations
+## Rules
 
-This tool acts as a **static metadata linter** for API specs and design checklists.
+| Rule | Severity | Flags |
+|---|---|---|
+| `AUTH-001` | high | Non-public endpoint with no declared auth |
+| `API1-001` | critical | Path has an object id (`{id}`, `:user_id`, `{uuid}`) with no `object_authorization` |
+| `API5-001` | critical | `/admin` route with no `role_required` |
+| `WEBHOOK-001` | high | Webhook route with no `signature_required` |
+| `AUTH-002` | high | Login route with no `rate_limit` |
+| `DATA-001` | medium | Response schema exposes a sensitive field (token, password, cpf, ...) |
 
-It is **not** a DAST (dynamic scanner) or SAST tool:
-- It does not send live HTTP requests to endpoints.
-- It does not scan underlying backend code (Python/Node/Go).
-- It relies on endpoint metadata or OpenAPI extension tags (e.g. `x-object-authorization`, `x-rate-limit`) to verify whether security controls were declared during API design.
-
-## Rules Covered
-
-- **AUTH-001**: Private endpoints missing authentication requirements.
-- **API1-001**: Path parameters containing IDs (`{id}`, `{uuid}`, `:user_id`) without declared object authorization logic (BOLA/IDOR risk).
-- **API5-001**: Administrative endpoints (`/admin`) missing role restrictions.
-- **WEBHOOK-001**: Public webhooks that do not require HMAC signature verification.
-- **AUTH-002**: Login routes (`/auth/login`) without rate limiting controls.
-- **DATA-001**: Sensitive fields (passwords, tokens, keys) declared in response fields.
-
-## Quickstart
-
-Install locally:
+## Install
 
 ```bash
-pip install .
+pip install .          # or pip install -e . for development
 ```
 
-Run on a sample JSON file:
+## Usage
 
 ```bash
 api-risk-analyzer --input examples/sample_api.json
-```
-
-Run on an OpenAPI spec and export Markdown:
-
-```bash
-python analyzer.py --input examples/openapi_sample.json --format markdown --output reports/summary.md
-```
-
-Export SARIF for GitHub Code Scanning:
-
-```bash
+api-risk-analyzer --input examples/openapi_sample.json --format markdown --output reports/summary.md
 api-risk-analyzer --input examples/openapi_sample.json --format sarif --output reports/results.sarif
+api-risk-analyzer --input examples/sample_api.json --fail-on high   # non-zero exit on high/critical findings
 ```
 
-Fail build on high or critical findings:
+`--input` is required. `--format` is `json` (default), `markdown`, or `sarif`. `--output` defaults to `reports/generated-report.<ext>`. `--fail-on` takes `low`/`medium`/`high`/`critical`.
 
-```bash
-api-risk-analyzer --input examples/sample_api.json --fail-on high
-```
+## OpenAPI extensions
 
-## OpenAPI Vendor Extensions
-
-For OpenAPI schemas, `api-risk-analyzer` parses global and operation-level `security` fields automatically. You can also specify vendor extensions on path items or operations:
+Global and operation-level `security` blocks are read automatically to infer `auth_required`. For the checks that don't map to standard OpenAPI fields, add these on a path item or operation:
 
 - `x-object-authorization: true`
 - `x-role-required: "admin"`
@@ -66,12 +44,10 @@ For OpenAPI schemas, `api-risk-analyzer` parses global and operation-level `secu
 
 ## Testing
 
-Run tests with `unittest`:
-
 ```bash
 python -m unittest discover -s tests
 ```
 
 ## License
 
-[MIT License](file:///C:/Users/gabri/Desktop/github/api-risk-analyzer/LICENSE)
+MIT — see [LICENSE](LICENSE).
