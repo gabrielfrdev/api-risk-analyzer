@@ -114,24 +114,34 @@ def _sarif_rules(findings):
 
 
 def compute_endpoint_scores(endpoints, findings):
-    # Group precomputed findings by route signature to avoid redundant rule passes
-    findings_map = {}
+    findings_by_index = {}
+    has_index = False
     if findings:
         for f in findings:
-            key = (f.get("method", "").upper(), f.get("path", ""))
-            findings_map.setdefault(key, []).append(f)
+            idx = f.get("endpoint_index")
+            if idx is not None:
+                has_index = True
+                findings_by_index.setdefault(idx, []).append(f)
 
     scores = []
-    for ep in endpoints:
+    for index, ep in enumerate(endpoints):
         method = ep.get("method", "").upper()
         path = ep.get("path", "")
-        ep_findings = findings_map.get((method, path), [])
+        if has_index:
+            ep_findings = findings_by_index.get(index, [])
+        else:
+            ep_findings = [
+                f for f in (findings or [])
+                if f.get("method", "").upper() == method and f.get("path", "") == path
+            ]
         scores.append({
             "method": method,
             "path": path,
             "score": score_endpoint(ep, endpoint_findings=ep_findings),
         })
     return scores
+
+
 
 
 

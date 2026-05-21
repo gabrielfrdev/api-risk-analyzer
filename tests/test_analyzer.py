@@ -2,6 +2,8 @@ import unittest
 
 from api_risk_analyzer.report import build_report, render_markdown, render_sarif
 from api_risk_analyzer.parser import validate_endpoints
+from api_risk_analyzer.rules import run_rules
+
 
 
 
@@ -51,7 +53,15 @@ class AnalyzerTest(unittest.TestCase):
         self.assertEqual(report["endpoint_scores"][0], {"method": "GET", "path": "/api/public", "score": "low"})
         self.assertEqual(report["endpoint_scores"][1], {"method": "POST", "path": "/api/admin", "score": "critical"})
 
-
+    def test_endpoint_scores_handles_duplicate_paths_independently(self):
+        endpoints = [
+            {"method": "GET", "path": "/api/users/{id}", "auth_required": True, "object_authorization": False},
+            {"method": "GET", "path": "/api/users/{id}", "auth_required": True, "object_authorization": True},
+        ]
+        findings = run_rules(endpoints)
+        report = build_report(endpoints, findings)
+        scores = [ep["score"] for ep in report["endpoint_scores"]]
+        self.assertEqual(scores, ["critical", "low"])
 
     def test_build_report_sorts_findings_by_risk(self):
         report = build_report(

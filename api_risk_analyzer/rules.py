@@ -27,8 +27,8 @@ OBJECT_ID_PATTERN = re.compile(
 )
 
 
-def finding(endpoint, rule_id, description, severity, recommendation, category, evidence=None):
-    return {
+def finding(endpoint, rule_id, description, severity, recommendation, category, evidence=None, endpoint_index=None):
+    item = {
         "rule_id": rule_id,
         "method": endpoint.get("method", "UNKNOWN"),
         "path": endpoint.get("path", "UNKNOWN"),
@@ -38,6 +38,9 @@ def finding(endpoint, rule_id, description, severity, recommendation, category, 
         "category": category,
         "evidence": evidence,
     }
+    if endpoint_index is not None:
+        item["endpoint_index"] = endpoint_index
+    return item
 
 
 def run_rules(endpoints):
@@ -92,7 +95,7 @@ def fields(endpoint):
 
 def check_missing_authentication(endpoints):
     findings = []
-    for endpoint in endpoints:
+    for index, endpoint in enumerate(endpoints):
         if not endpoint.get("auth_required", True) and not is_public(endpoint):
             findings.append(finding(
                 endpoint,
@@ -105,13 +108,14 @@ def check_missing_authentication(endpoints):
                 ),
                 category="broken-authentication",
                 evidence="auth_required is false and public is false",
+                endpoint_index=index,
             ))
     return findings
 
 
 def check_missing_object_authorization(endpoints):
     findings = []
-    for endpoint in endpoints:
+    for index, endpoint in enumerate(endpoints):
         path = endpoint.get("path", "")
         match = OBJECT_ID_PATTERN.search(path)
         if match and not endpoint.get("object_authorization", False):
@@ -126,13 +130,14 @@ def check_missing_object_authorization(endpoints):
                 ),
                 category="broken-object-level-authorization",
                 evidence=f"Path contains '{match.group(1)}' but object_authorization is false",
+                endpoint_index=index,
             ))
     return findings
 
 
 def check_admin_without_role(endpoints):
     findings = []
-    for endpoint in endpoints:
+    for index, endpoint in enumerate(endpoints):
         path = endpoint.get("path", "")
         if _has_segment(path, {"admin", "admins"}) and not endpoint.get("role_required"):
             findings.append(finding(
@@ -143,13 +148,14 @@ def check_admin_without_role(endpoints):
                 recommendation="Restrict the route to an explicit admin or operator role.",
                 category="broken-function-level-authorization",
                 evidence="Path contains '/admin' but no role_required is set",
+                endpoint_index=index,
             ))
     return findings
 
 
 def check_unsigned_webhook(endpoints):
     findings = []
-    for endpoint in endpoints:
+    for index, endpoint in enumerate(endpoints):
         path = endpoint.get("path", "")
         if (
             _has_segment(path, {"webhook", "webhooks"})
@@ -166,13 +172,14 @@ def check_unsigned_webhook(endpoints):
                 ),
                 category="webhook-integrity",
                 evidence="Path contains 'webhook' but signature_required is false",
+                endpoint_index=index,
             ))
     return findings
 
 
 def check_login_without_rate_limit(endpoints):
     findings = []
-    for endpoint in endpoints:
+    for index, endpoint in enumerate(endpoints):
         path = endpoint.get("path", "")
         login_segments = {"login", "logins", "sign_in", "signin"}
         if _has_segment(path, login_segments) and not endpoint.get("rate_limit", False):
@@ -187,13 +194,14 @@ def check_login_without_rate_limit(endpoints):
                 ),
                 category="brute-force-protection",
                 evidence="Path contains 'login' but rate_limit is false",
+                endpoint_index=index,
             ))
     return findings
 
 
 def check_sensitive_fields(endpoints):
     findings = []
-    for endpoint in endpoints:
+    for index, endpoint in enumerate(endpoints):
         exposed = [field for field in fields(endpoint) if is_sensitive_field_name(field)]
         if exposed:
             findings.append(finding(
@@ -207,6 +215,7 @@ def check_sensitive_fields(endpoints):
                 ),
                 category="sensitive-data-exposure",
                 evidence=f"Fields found: {', '.join(exposed)}",
+                endpoint_index=index,
             ))
     return findings
 
