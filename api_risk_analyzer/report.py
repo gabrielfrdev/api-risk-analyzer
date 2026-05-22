@@ -40,6 +40,10 @@ def _finding_sort_key(finding):
     )
 
 
+def _public_finding(finding):
+    return {k: v for k, v in finding.items() if k != "endpoint_index"}
+
+
 def _safe_artifact_uri(path):
     if not path:
         return "api-routes.json"
@@ -143,9 +147,6 @@ def compute_endpoint_scores(endpoints, findings):
 
 
 
-
-
-
 def build_report(endpoints, findings):
     summary = {
         "total_findings": len(findings),
@@ -170,7 +171,7 @@ def build_report(endpoints, findings):
         "total_endpoints": len(endpoints),
         "summary": summary,
         "endpoint_scores": compute_endpoint_scores(endpoints, findings),
-        "findings": sorted(findings, key=_finding_sort_key),
+        "findings": [_public_finding(f) for f in sorted(findings, key=_finding_sort_key)],
     }
 
 

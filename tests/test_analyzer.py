@@ -5,8 +5,6 @@ from api_risk_analyzer.parser import validate_endpoints
 from api_risk_analyzer.rules import run_rules
 
 
-
-
 class AnalyzerTest(unittest.TestCase):
     def test_validate_requires_a_list(self):
         with self.assertRaisesRegex(ValueError, "list of endpoints"):
@@ -62,6 +60,13 @@ class AnalyzerTest(unittest.TestCase):
         report = build_report(endpoints, findings)
         scores = [ep["score"] for ep in report["endpoint_scores"]]
         self.assertEqual(scores, ["critical", "low"])
+
+    def test_build_report_strips_internal_endpoint_index_metadata(self):
+        endpoints = [{"method": "GET", "path": "/api/private", "auth_required": False, "public": False}]
+        findings = run_rules(endpoints)
+        self.assertIn("endpoint_index", findings[0])
+        report = build_report(endpoints, findings)
+        self.assertNotIn("endpoint_index", report["findings"][0])
 
     def test_build_report_sorts_findings_by_risk(self):
         report = build_report(
