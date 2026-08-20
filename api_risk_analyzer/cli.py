@@ -1,13 +1,26 @@
 import argparse
+from importlib.metadata import PackageNotFoundError, version
 
 from api_risk_analyzer.report import build_report, write_json, write_markdown, write_sarif
 from api_risk_analyzer.rules import run_rules
 from api_risk_analyzer.parser import load_api
 
 
+def _package_version():
+    try:
+        return version("api-risk-analyzer")
+    except PackageNotFoundError:
+        return "0.0.0-dev"
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Analyze API endpoint metadata for common security risks."
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {_package_version()}",
     )
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", default=None)

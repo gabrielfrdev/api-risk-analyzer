@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import patch
+from io import StringIO
 import os
 import json
 import tempfile
@@ -76,6 +77,14 @@ class CliTest(unittest.TestCase):
         with patch("sys.argv", ["analyzer.py", "--input", self.sample_path]):
             main()
             mock_print.assert_any_call("findings: 1 (critical: 1)")
+
+    def test_cli_version_flag_exits_cleanly(self):
+        with patch("sys.argv", ["analyzer.py", "--version"]), \
+                patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            with self.assertRaises(SystemExit) as ctx:
+                main()
+            self.assertEqual(ctx.exception.code, 0)
+            self.assertIn("analyzer.py", mock_stdout.getvalue())
 
 
 if __name__ == "__main__":
